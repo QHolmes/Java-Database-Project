@@ -14,6 +14,7 @@ public class infoDatabase implements Serializable{
 	private String databaseLocation;
 	private int primaryColumn = 0;
 	private String[] names;
+	private Exception exception;
 	
     protected infoDatabase(String databaseName, String databaseLocation, int[] Types, int primaryColumn, String[] names){
 		
@@ -39,47 +40,6 @@ public class infoDatabase implements Serializable{
 		return databaseName;
 	}
 	
-    protected void addColumn(int dataType, int place, String name){
-    	
-		    Types = Arrays.copyOf(Types, 1 + Types.length);
-		    names = Arrays.copyOf(names, 1 + names.length);
-
-
-		if(place > Types.length){	
-			
-		     int temp01 = dataType;
-		     
-		     for(int i = place; i < Types.length; i++){
-			     int temp02 = Types[i];
-			     Types[i] = temp01;
-			     temp01 = temp02;
-		     }
-		     
-		     Types[place] = dataType;
-		     names[place] = name;
-		}else{
-			Types[Types.length -1] = dataType;
-		}
-		
-		
-	}
-	
-    protected void removeColumn(int place){
-		
-		Types[place] = 0;
-		
-		int[] temp = new int[Types.length - 1];
-		
-		for(int i = 0; i < temp.length; i++){
-			if(Types[i] != 0){
-				temp[i] = Types[i];
-			}
-			
-			Types = temp;
-		}
-		
-	}
-    
     protected void setPrimary(int primaryColumn){
     	this.primaryColumn = primaryColumn;
     }
@@ -104,7 +64,76 @@ public class infoDatabase implements Serializable{
     	return Types;
     }
     
-    protected String[] getColumnName(){
-        return names;
+    protected void setTypes(int[] newTypes) throws Exception{
+    	
+    	//Checks that there are the same number of variables 
+    	if(Types.length == newTypes.length){
+    		Types = newTypes;
+    	}else{
+    		System.err.println("Error setting column types");
+    		System.err.println("Column types differnt lengths");
+    		throw exception; 
+    	}
+    	
     }
+
+	protected String[] getColumnName(){
+	    return names;
+	}
+	
+	protected void setColumnName(String[] newNames) throws Exception{
+		//Checks that there are the same number of variables 
+    	if(names.length == newNames.length){
+    		names = newNames;
+    	}else{
+    		System.err.println("Error setting column names");
+    		System.err.println("Column names differnt lengths");
+    		throw exception; 
+    	}
+	}
+
+	protected void addColumn(int dataType, String name){
+		
+		Types = Arrays.copyOf(Types, 1 + Types.length);
+		names = Arrays.copyOf(names, 1 + names.length);
+	
+		Types[Types.length -1] = dataType;
+		names[names.length -1] = name;
+				
+		
+	}
+
+	protected void removeColumn(int place){
+		
+		int[] temp = new int[Types.length - 1];
+		int j = 0;
+		
+		for(int i = 0; i < Types.length; i++){
+			if(i != place){
+				temp[j] = Types[i];
+				j++;
+			}			
+		}
+		
+		Types = temp;
+		
+		String[] temp2 = new String[names.length - 1];
+		j=0;
+		
+		for(int i = 0; i < names.length; i++){
+			if(i != place){
+				temp2[j] = names[i];
+				j++;
+			}	
+			
+		}
+		
+		names = temp2;
+		System.out.println("done");
+	}
+	
+   protected void changeColumn(int place, String name){
+		
+	   names[place] = name;		
+	}
 }

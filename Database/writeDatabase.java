@@ -16,7 +16,7 @@ public class writeDatabase {
 
 	try {
 	          
-	          BufferedWriter writer = new BufferedWriter(new FileWriter(String.format("%s\\%s.csc", databaseLocation, databaseName)));
+	          BufferedWriter writer = new BufferedWriter(new FileWriter(String.format("%s\\%s.csv", databaseLocation, databaseName)));
 		
 	          for(int c = 0; c < table.size(); c++)//for each row
 	          {

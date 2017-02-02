@@ -36,8 +36,8 @@ public class Databases implements Serializable {
 		
 		//Create save file locations
 		this.databaseLocation = String.format("%s\\", databaseLocation);
-		databaseList = String.format("%s\\List.csc", databaseLocation);
-        String name = String.format("%s\\%s", databaseLocation, "List.csc");
+		databaseList = String.format("%s\\List.csv", databaseLocation);
+        String name = String.format("%s\\%s", databaseLocation, "List.csv");
         String name2 = String.format("%s%s", databaseLocation, databaseInfoFolder);
 		
 		File file = new File(name);
@@ -88,7 +88,7 @@ public class Databases implements Serializable {
 		
 	}
 	
-	public void createDatabase(String databaseName, int[] dataType, ArrayList<String> firstRow, String[] names) throws Exception{
+	public void createDatabase(String databaseName, int[] dataType, String[] names) throws Exception{
 		
 		String name = String.format("%s%s%s", databaseLocation, databaseInfoFolder, databaseName);
 		System.out.println(name);
@@ -109,24 +109,99 @@ public class Databases implements Serializable {
 		databaseTable.add(databaseName);
 		
 		//Create and save info
-		infoDatabase e = new infoDatabase(databaseName, String.format("%s%s.csc", databaseLocation, databaseName), dataType, names);
+		infoDatabase e = new infoDatabase(databaseName, String.format("%s%s.csv", databaseLocation, databaseName), dataType, names);
 		saveFile(databaseName, e);
 		
 		//Create the table
-		ArrayList<ArrayList<String>> temp = new  ArrayList<ArrayList<String>>(1);
-		temp.add(firstRow);
+		ArrayList<ArrayList<String>> temp = new  ArrayList<ArrayList<String>>(0);
 		
 		
 		System.out.println(databaseLocation);
-		writeDatabase.write(databaseName, databaseLocation, temp);
+		
 		lastReadArray = temp;
+		writeData(databaseName);
 		
 	}
 	
-    public void deleteDatabase(String databaseName) throws Exception{
+	public void importDatabase(String databaseName, int[] dataType, ArrayList<ArrayList<String>> firstRow, String[] names) throws Exception{
+		
+		String name = String.format("%s%s%s", databaseLocation, databaseInfoFolder, databaseName);
+		System.out.println(name);
+		
+		File file = new File(name);
+		  
+		//Create the file or throw FileAlreadyExistsException;
+		
+		try {
+			if (file.createNewFile()){
+			}else{
+			}
+		} catch (IOException e) {
+			throw FileAlreadyExistsException;
+		}
+		
+		//Add database to the list
+		databaseTable.add(databaseName);
+		
+		//Create and save info
+		infoDatabase e = new infoDatabase(databaseName, String.format("%s%s.csv", databaseLocation, databaseName), dataType, names);
+		saveFile(databaseName, e);
+		
+		//Create the table	
+		
+		System.out.println(databaseLocation);
+		
+		lastReadArray = firstRow;
+		writeData(databaseName);
+		
+	}
+	
+    private void writeData(String databaseName) {
+    	
+    	String[] name = databaseInfo.getColumnName();
+    	ArrayList<String> temp = new ArrayList<String>(0);
+    	
+    	for(int i = 0; i < name.length; i++){
+    		temp.add(name[i]);
+    	}
+    	
+    	lastReadArray.add(0, temp);
+    	writeDatabase.write(databaseName, databaseLocation, lastReadArray);
+    	lastReadArray.remove(0);
+		
+	}
+
+	private void saveFile(String databaseName, infoDatabase e) throws Exception {
+		
+		//Create file path
+		String name = String.format("%s%s\\%s", databaseLocation, databaseInfoFolder, databaseName);
+		
+			try {
+			
+				//Write file
+	
+				FileOutputStream fileOut =
+						new FileOutputStream(name);
+				ObjectOutputStream out = new ObjectOutputStream(fileOut);
+				out.writeObject(e);
+				out.close();
+				fileOut.close();
+	        
+			}catch(IOException i) {
+				i.printStackTrace();;
+			}
+		
+		
+		//save local variables 
+		databaseInfo = e;
+		lastReadDatabase = databaseName;
+		lastReadArray = readDatabase(databaseName);
+	}
+
+	public void deleteDatabase(String databaseName) throws Exception{
 		
     	String name = String.format("%s%s%s", databaseLocation, databaseInfoFolder, databaseName);
-    	String name2 = String.format("%s/%s.csc", databaseLocation, databaseName);
+    	String name2 = String.format("%s/%s.csv", databaseLocation, databaseName);
     	
 		File file = new File(name);
 		File file2 = new File(name2);
@@ -167,79 +242,12 @@ public class Databases implements Serializable {
     	return  lastReadArray.size();
     }
     
-    public void addColumn(String databaseName, int dataType, int place, String name) throws Exception{
-    	
-    	//Load info of Data base
-    	readDatabase(databaseName);
-    	infoDatabase e = databaseInfo;
-    	
-    	//Make changes
-    	e.addColumn(dataType, place, name);
-
-    	int rowSize;
-    	
-    	try{    		
-    	     rowSize = lastReadArray.get(0).size();
-    	}catch(NullPointerException e1){
-    		 rowSize = 0;
-    	}
-    	ArrayList<String> newColumn = new ArrayList<String>(rowSize);
-   	
-    	for(int i = 0; i <= rowSize; i++){
-    		newColumn.add(" ");
-    	}
-    	
-    	//Adds new column to the correct place, if place is over size adds to end 
-    	int arraySize;
-    	
-    	try{
-    		arraySize = lastReadArray.size();
-      	}catch(NullPointerException e1){
-      		arraySize = 0;
-   	    }
-    	
-    	if(place < arraySize){
-    	    lastReadArray.add(place, newColumn);
-    	}else{
-    		lastReadArray.add(newColumn);
-    	}
-
-    	
-    	//Save changes
-    	saveFile(databaseName, e); 
-    	writeDatabase.write(databaseName, databaseLocation, lastReadArray);
-    }
-    
-   public void deleteColumn(String databaseName, int place) throws Exception{
-    	
-	    //Load info of database
-	   readDatabase(databaseName);
-   	   infoDatabase e = databaseInfo;
-    	
-    	//Make changes
-    	e.removeColumn(place);    	
-    	lastReadArray.remove(place);
-    	
-    	//Save changes
-    	saveFile(databaseName, e);    	
-    }
-   
     public boolean exist(String databaseName){
     	
     	return databaseTable.contains(databaseName);    
     }
     
    
-    
-    public int[] getDatabaseColumn(String databaseName) throws Exception{
-		
-    	   //Load and return database info
-    	  readDatabase(databaseName);
-    	  infoDatabase e = databaseInfo;
-    	  
-    	  return e.getTypes();     	  
-    	    	   	
-    }
     
     public void setPrime(String databaseName, int primaryColumn) throws Exception{
     	
@@ -252,11 +260,13 @@ public class Databases implements Serializable {
     	
     	//Sort and save
     	
-    	 lastReadArray = sortDatabase.sortArray(lastReadArray, databaseInfo.getPrimary());
+    	int[] i = databaseInfo.getTypes();
+    	
+    	lastReadArray = sortDatabase.sortArray(lastReadArray, databaseInfo.getPrimary(), i[databaseInfo.getPrimary()]);
     	
     	
     	if(databaseTable.contains(databaseName)){
-      	  writeDatabase.write(databaseName, databaseLocation, lastReadArray);
+    		writeData(databaseName);
         }else{
       	  throw FileNotFound;
         }      
@@ -275,33 +285,6 @@ public class Databases implements Serializable {
     
     
     
-    private void saveFile(String databaseName, infoDatabase e) throws Exception {
-    	
-    	//Create file path
-    	String name = String.format("%s%s\\%s", databaseLocation, databaseInfoFolder, databaseName);
-    	
-    		try {
-    		
-    			//Write file
- 
-    			FileOutputStream fileOut =
-    					new FileOutputStream(name);
-    			ObjectOutputStream out = new ObjectOutputStream(fileOut);
-    			out.writeObject(e);
-    			out.close();
-    			fileOut.close();
-            
-    		}catch(IOException i) {
-    			i.printStackTrace();;
-    		}
-    	
-    	
-    	//save local variables 
-    	databaseInfo = e;
-    	lastReadDatabase = databaseName;
-    	lastReadArray = readDatabase(databaseName);
-    }
-    
     public void addRow(String databaseName, ArrayList<String> row) throws Exception{   	
 
       //Pull database into memory
@@ -314,12 +297,14 @@ public class Databases implements Serializable {
       
       //Add row then sort 
       lastReadArray.add(row);
-     
-      lastReadArray = sortDatabase.sortArray(lastReadArray, databaseInfo.getPrimary());
+
+      int[] i = databaseInfo.getTypes();
+  	
+  	  lastReadArray = sortDatabase.sortArray(lastReadArray, databaseInfo.getPrimary(), i[databaseInfo.getPrimary()]);
       
       //Save file
       if(databaseTable.contains(databaseName)){
-    	  writeDatabase.write(databaseName, databaseLocation, lastReadArray);
+    	  writeData(databaseName);
       }else{
     	  throw FileNotFound;
       }      
@@ -339,11 +324,13 @@ public class Databases implements Serializable {
         lastReadArray.remove(changeRow);
         lastReadArray.add(changeRow, row);
        
-        lastReadArray = sortDatabase.sortArray(lastReadArray, databaseInfo.getPrimary());
+        int[] i = databaseInfo.getTypes();
+    	
+    	lastReadArray = sortDatabase.sortArray(lastReadArray, databaseInfo.getPrimary(), i[databaseInfo.getPrimary()]);
         
         //Save file
         if(databaseTable.contains(databaseName)){
-      	  writeDatabase.write(databaseName, databaseLocation, lastReadArray);
+        	writeData(databaseName);
         }else{
       	  throw FileNotFound;
         }      
@@ -361,6 +348,12 @@ public class Databases implements Serializable {
     	}
     	
     	lastReadArray.remove(place);
+    	 //Save file
+        if(databaseTable.contains(databaseName)){
+        	writeData(databaseName);
+        }else{
+      	  throw FileNotFound;
+        }  
     	
     }
     
@@ -394,7 +387,7 @@ public class Databases implements Serializable {
     	   	        	 }
     	   	        	 
     	   	        	 break;
-    	   	         case 3: //Check if date (only takes MMM d yyyy)
+    	   	         case 3: //Check if date (only takes MMM d yyyy HH:mm:ss)
     	   	        	 try{
     	   	        		SimpleDateFormat parser = new SimpleDateFormat("MMM d yyyy HH:mm:ss");
     	   	                @SuppressWarnings("unused")
@@ -424,7 +417,7 @@ public class Databases implements Serializable {
     	infoDatabase e = null;
     	if(!(new String(databaseName).equals(lastReadDatabase))){
     	          String name = String.format("%s%s%s", databaseLocation, databaseInfoFolder, databaseName);
-    	          String name2 = String.format("%s%s.csc", databaseLocation, databaseName);
+    	          String name2 = String.format("%s%s.csv", databaseLocation, databaseName);
     	          if(databaseTable.contains(databaseName)){    	    	      
     	    	      
     	    	      FileInputStream fileIn = new FileInputStream(name);
@@ -440,7 +433,10 @@ public class Databases implements Serializable {
 		                in.close();
 		                fileIn.close();
 		                
-		                lastReadArray = readDatabase.readAll(name2);
+		                
+		                
+		                lastReadArray = readDatabase.readCSV(name2);
+		                lastReadArray.remove(0);
 	    	    	    lastReadDatabase = databaseName;
 		                
                   }else{
@@ -450,6 +446,7 @@ public class Databases implements Serializable {
     	}else{
     	}
     	
+    	    	
     	return lastReadArray;
     	
     }
@@ -459,6 +456,7 @@ public class Databases implements Serializable {
     	
     	readDatabase(databaseName);
     	ArrayList<ArrayList<String>> temp = new ArrayList<ArrayList<String>>(0);
+    	
     	
     	for(int i = 0; i <= range; i++){
     		temp.add(lastReadArray.get(rowStart + i));
@@ -471,10 +469,182 @@ public class Databases implements Serializable {
    
     
     
-    public String[] getColumnNames(String databaseName) throws Exception{
+    public void addColumn(String databaseName, int dataType, int place, String name, String defaultValue) throws Exception{
+		
+		//Load info of Data base
+		readDatabase(databaseName);
+		
+		//Make changes
+		
+	
+		int rowSize;
+		int columnSize;
+		
+		try{    		
+		     rowSize = lastReadArray.size();
+		}catch(NullPointerException e1){
+			 rowSize = 0;
+		}
+		
+		try{    		
+		     columnSize = lastReadArray.get(0).size();
+		}catch(NullPointerException e1){
+			 columnSize = 0;
+		}
+		
+		databaseInfo.addColumn(dataType, name);		
+		
+		
+		//Adds null values for each spot
+		for(int i = 0; i < rowSize; i++){
+			lastReadArray.get(i).add(defaultValue);
+		}
+		
+		//Adds new column to the correct place, if the place is greater then the 
+		if(place < columnSize){
+			moveColumn(databaseName, place, columnSize);
+		}	
+	
+		
+		//Save changes
+		saveFile(databaseName, databaseInfo); 
+		writeData(databaseName);
+	}
+    
+    public void changeColumn(String databaseName, int place, String name) throws Exception {
+    	
+    	//Load info of Data base
+    			readDatabase(databaseName);
+    			infoDatabase e = databaseInfo;
+    			
+       //Make changes
+    			e.changeColumn(place, name);
+    			
+       //Save changes
+    			saveFile(databaseName, e); 
+    			writeData(databaseName);
+    	
+    }
+
+	public void deleteColumn(String databaseName, int place) throws Exception{
+		
+	    //Load info of database
+	   readDatabase(databaseName);
+	   infoDatabase e = databaseInfo;
+		
+		//Make changes
+		e.removeColumn(place);
+		
+		for(int i = 0; i < lastReadArray.size(); i++){
+			lastReadArray.get(i).remove(place);
+		}
+		
+		//Save changes
+		saveFile(databaseName, e);    	
+	}
+
+	public int[] getDatabaseColumn(String databaseName) throws Exception{
+		
+		   //Load and return database info
+		  readDatabase(databaseName);
+		  infoDatabase e = databaseInfo;
+		  
+		  return e.getTypes();     	  
+		    	   	
+	}
+
+	public String[] getColumnNames(String databaseName) throws Exception{
     	
     	readDatabase(databaseName);    	
     	return databaseInfo.getColumnName(); 
+    	
+    }
+	
+    public void moveColumn(String databaseName, int newPlace, int oldPlace) throws Exception{
+    	readDatabase(databaseName);
+    	
+    	boolean forward = false;
+    	boolean done = false;
+    	String[] names = databaseInfo.getColumnName();
+    	int[] Types = databaseInfo.getTypes();
+    	int tempType;
+    	String tempName;
+    	
+    	
+    	 
+    	
+    	String temp = "";
+    	
+    	if(newPlace == oldPlace){
+    		System.out.println("no move");
+    		return;
+    	}
+    	
+    	//Checks to see which way to go and or if done
+		if(newPlace > oldPlace){
+    		forward = true;
+    	}else{
+    		if(oldPlace > newPlace){
+    			forward = false;
+    		}else{
+    			System.out.println("Already there");
+    			done = true;
+    		}
+    	}
+    	
+    	while(!done){    		
+        	
+    		//If the new place is in front of the old place and not done
+        	if(forward && !done){ 
+        		for(int i = 0; i < lastReadArray.size(); i++){
+            		temp = lastReadArray.get(i).get(newPlace);
+            		lastReadArray.get(i).set(newPlace, lastReadArray.get(i).get(newPlace - 1));
+            		lastReadArray.get(i).set(newPlace - 1, temp);
+            	}
+        		newPlace--;
+        		
+        		tempType = Types[newPlace];
+        		Types[newPlace] = Types[newPlace -1];
+        		Types[newPlace -1] = tempType;
+        		
+        		tempName = names[newPlace];
+        		names[newPlace] = names[newPlace -1];
+        		names[newPlace -1] = tempName;
+        		
+        		//if the gap between is now only 1
+        		if(!(newPlace > oldPlace)){
+        			done = true;
+        		}
+        	}
+        	
+        	//If the new place is behind the old place and not done
+        	if(!forward && !done){  	
+        		for(int i = 0; i < lastReadArray.size(); i++){
+            		temp = lastReadArray.get(i).get(oldPlace);
+            		lastReadArray.get(i).set(oldPlace, lastReadArray.get(i).get(oldPlace - 1));
+            		lastReadArray.get(i).set(oldPlace - 1, temp);
+            	}
+        		oldPlace--;
+        		
+        		//if the gap between is now only 1
+        		if(!(oldPlace > newPlace)){
+        			done = true;
+        		}
+        		
+        		tempType = Types[oldPlace +1];
+        		Types[oldPlace +1] = Types[oldPlace];
+        		Types[oldPlace] = tempType;
+        		
+        		tempName = names[oldPlace +1];
+        		names[oldPlace +1] = names[oldPlace];
+        		names[oldPlace] = tempName;
+        	}
+        	
+        	databaseInfo.setColumnName(names);
+        	databaseInfo.setTypes(Types);       	
+        	
+    	}
+        	  	
     	
     }
     
@@ -504,6 +674,9 @@ public class Databases implements Serializable {
     	return toString(lastReadArray);	
     }
     
+    public String getLocation(){
+    	return databaseLocation;
+    }
     
 
 }

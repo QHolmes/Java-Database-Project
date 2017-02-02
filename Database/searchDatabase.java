@@ -13,7 +13,7 @@ public class searchDatabase {
 	 */
 	public static int[] SearchDoubleNS(double search, String databaseName, int column){
 	    
-		ArrayList<ArrayList<String>> table = readDatabase.readAll(databaseName);
+		ArrayList<ArrayList<String>> table = readDatabase.readCSV(databaseName);
 		double compare;
 		int[] matches = new int[0];
 		int arrayPlace = 0;
@@ -39,7 +39,7 @@ public class searchDatabase {
 	
     public static int[] SearchStringNS(String search, String databaseName, int column){	 
     	
-		ArrayList<ArrayList<String>> table = readDatabase.readAll(databaseName);
+		ArrayList<ArrayList<String>> table = readDatabase.readCSV(databaseName);
 		
 		double compare;
 		int[] matches = new int[0];
